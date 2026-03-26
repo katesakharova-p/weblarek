@@ -13,7 +13,7 @@ export class ProductsModel {
   }
 
   getProductById(id: string): IProduct | undefined {
-    return this._products.find(item => item.id === id);
+    return this._products.find(product => product.id === id);
   }
 
   setSelectedProduct(product: IProduct): void {

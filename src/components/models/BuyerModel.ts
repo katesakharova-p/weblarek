@@ -1,44 +1,44 @@
 import { IBuyer, TPayment } from '../../types';
 
 export class BuyerModel {
-  private _payment: TPayment | null = null;
-  private _address: string = '';
-  private _phone: string = '';
+  private _payment: TPayment | '' = '';
   private _email: string = '';
+  private _phone: string = '';
+  private _address: string = '';
 
   setPayment(payment: TPayment): void {
     this._payment = payment;
-  }
-
-  setAddress(address: string): void {
-    this._address = address;
-  }
-
-  setPhone(phone: string): void {
-    this._phone = phone;
   }
 
   setEmail(email: string): void {
     this._email = email;
   }
 
+  setPhone(phone: string): void {
+    this._phone = phone;
+  }
+
+  setAddress(address: string): void {
+    this._address = address;
+  }
+
   getData(): IBuyer {
     return {
       payment: this._payment as TPayment,
-      address: this._address,
-      phone: this._phone,
       email: this._email,
+      phone: this._phone,
+      address: this._address,
     };
   }
 
   clear(): void {
-    this._payment = null;
-    this._address = '';
-    this._phone = '';
+    this._payment = '';
     this._email = '';
+    this._phone = '';
+    this._address = '';
   }
 
-  validate(): Partial<Record<keyof IBuyer, string>> {
+  validateStep1(): Partial<Record<keyof IBuyer, string>> {
     const errors: Partial<Record<keyof IBuyer, string>> = {};
 
     if (!this._payment) {
@@ -46,15 +46,21 @@ export class BuyerModel {
     }
 
     if (!this._address) {
-      errors.address = 'Укажите адрес доставки';
+      errors.address = 'Введите адрес доставки';
+    }
+
+    return errors;
+  }
+
+  validateStep2(): Partial<Record<keyof IBuyer, string>> {
+    const errors: Partial<Record<keyof IBuyer, string>> = {};
+
+    if (!this._email) {
+      errors.email = 'Введите email';
     }
 
     if (!this._phone) {
-      errors.phone = 'Укажите телефон';
-    }
-
-    if (!this._email) {
-      errors.email = 'Укажите email';
+      errors.phone = 'Введите телефон';
     }
 
     return errors;

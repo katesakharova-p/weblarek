@@ -4,11 +4,13 @@ export class CartModel {
   private _items: IProduct[] = [];
 
   getItems(): IProduct[] {
-    return this._items;
+    return [...this._items];
   }
 
   addItem(product: IProduct): void {
-    this._items.push(product);
+    if (!this.contains(product.id)) {
+      this._items.push(product);
+    }
   }
 
   removeItem(productId: string): void {
