@@ -1,6 +1,7 @@
 import { IProduct } from "../../types";
+import { EventEmitter } from "../base/Events";
 
-export class CartModel {
+export class CartModel extends EventEmitter {
   private _items: IProduct[] = [];
 
   getItems(): IProduct[] {
@@ -10,15 +11,18 @@ export class CartModel {
   addItem(product: IProduct): void {
     if (!this.contains(product.id)) {
       this._items.push(product);
+      this.emit('cart:changed', this._items);
     }
   }
 
   removeItem(productId: string): void {
     this._items = this._items.filter((item) => item.id !== productId);
+    this.emit('cart:changed', this._items);
   }
 
   clear(): void {
     this._items = [];
+    this.emit('cart:changed', this._items);
   }
 
   getTotal(): number {

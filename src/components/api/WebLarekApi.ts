@@ -5,7 +5,6 @@ import {
   IOrderResult,
   IProductsResponse,
 } from "../../types";
-import { API_URL } from "../../utils/constants";
 
 export class WebLarekApi {
   private api: IApi;
@@ -16,13 +15,13 @@ export class WebLarekApi {
 
   getProducts(): Promise<IProduct[]> {
     return this.api
-      .get<IProductsResponse>(`${API_URL}/product`)
+      .get<IProductsResponse>(`/product`)
       .then((data) => {
         return data.items;
       });
   }
 
   postOrder(order: IOrder): Promise<IOrderResult> {
-    return this.api.post(`${API_URL}/order`, order);
+    return this.api.post<IOrderResult>(`/order`, order);
   }
 }
