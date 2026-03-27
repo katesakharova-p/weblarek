@@ -234,3 +234,15 @@ GET /product - загружает каталог товаров
 POST /order - отправляет данные заказа на сервер
 
 При успешном создании заказа сервер возвращает объект с идентификатором заказа и итоговой суммой.
+
+### Слой коммуникации
+
+#### Класс WebLarekApi
+
+Назначение: отвечает за взаимодействие с сервером
+
+constructor(api: IApi)
+
+getProducts(): Promise<IProduct[]>
+
+postOrder(order: IOrder): Promise<IOrderResult>
