@@ -1,10 +1,10 @@
-import { IBuyer, TPayment } from '../../types';
+import { IBuyer, TPayment } from "../../types";
 
 export class BuyerModel {
-  private _payment: TPayment | '' = '';
-  private _email: string = '';
-  private _phone: string = '';
-  private _address: string = '';
+  private _payment: TPayment | "" = "";
+  private _email: string = "";
+  private _phone: string = "";
+  private _address: string = "";
 
   setPayment(payment: TPayment): void {
     this._payment = payment;
@@ -32,21 +32,21 @@ export class BuyerModel {
   }
 
   clear(): void {
-    this._payment = '';
-    this._email = '';
-    this._phone = '';
-    this._address = '';
+    this._payment = "";
+    this._email = "";
+    this._phone = "";
+    this._address = "";
   }
 
   validateStep1(): Partial<Record<keyof IBuyer, string>> {
     const errors: Partial<Record<keyof IBuyer, string>> = {};
 
     if (!this._payment) {
-      errors.payment = 'Не выбран способ оплаты';
+      errors.payment = "Не выбран способ оплаты";
     }
 
     if (!this._address) {
-      errors.address = 'Введите адрес доставки';
+      errors.address = "Введите адрес доставки";
     }
 
     return errors;
@@ -56,11 +56,11 @@ export class BuyerModel {
     const errors: Partial<Record<keyof IBuyer, string>> = {};
 
     if (!this._email) {
-      errors.email = 'Введите email';
+      errors.email = "Введите email";
     }
 
     if (!this._phone) {
-      errors.phone = 'Введите телефон';
+      errors.phone = "Введите телефон";
     }
 
     return errors;
