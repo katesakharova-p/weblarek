@@ -54,29 +54,34 @@ cart.clear();
 console.log("После очистки:", cart.getItems());
 
 // ==================== BuyerModel ====================
+
 console.log("\n========== BuyerModel ==========");
 
 const buyer = new BuyerModel();
 
-// 👉 Шаг 1 (оплата + адрес)
+// Пустые данные
+console.log("Ошибки (пустые данные):", buyer.validate());
+
+// Частично заполненные данные
 buyer.setData({
   payment: "card",
-  address: "г. Москва, ул. Тверская, д. 1",
+  address: "г. Ташкент, ул. Байсун, д. 2",
 });
 
-console.log("Ошибки шаг 1:", buyer.validateStep1());
+console.log("Ошибки (частично заполнено):", buyer.validate());
 
-// 👉 Шаг 2 (контакты)
+// Полностью заполненные данные
 buyer.setData({
   email: "test@mail.com",
-  phone: "+79991234567",
+  phone: "+998712222222",
 });
 
-console.log("Ошибки шаг 2:", buyer.validateStep2());
+console.log("Ошибки (все данные заполнены):", buyer.validate());
 
-
+// Получение данных
 console.log("Данные покупателя:", buyer.getData());
 
+// Очистка
 buyer.clear();
 
 console.log("После очистки:", buyer.getData());

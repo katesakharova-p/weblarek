@@ -1,4 +1,4 @@
-import { IProduct } from '../../types';
+import { IProduct } from "../../types";
 
 export class CartModel {
   private _items: IProduct[] = [];
@@ -11,14 +11,13 @@ export class CartModel {
     // защита от добавления без цены
     if (product.price === null) return;
 
-    const exists = this._items.some(item => item.id === product.id);
-    if (!exists) {
+    if (!this.contains(product.id)) {
       this._items.push(product);
     }
   }
 
   removeItem(product: IProduct): void {
-    this._items = this._items.filter(item => item.id !== product.id);
+    this._items = this._items.filter((item) => item.id !== product.id);
   }
 
   clear(): void {
@@ -34,6 +33,6 @@ export class CartModel {
   }
 
   contains(id: string): boolean {
-    return this._items.some(item => item.id === id);
+    return this._items.some((item) => item.id === id);
   }
 }

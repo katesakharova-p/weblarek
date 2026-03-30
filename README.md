@@ -239,8 +239,7 @@ type TPayment = 'card' | 'cash'; // Тип оплаты
 `setData(data: Partial<IBuyer>): void` — сохраняет переданные данные покупателя (позволяет обновлять отдельные поля без перезаписи остальных)
 `getData(): Partial<IBuyer>` — возвращает текущие данные покупателя
 `clear(): void` - очищает все данные покупателя
-`validateStep1(): Partial<Record<keyof IBuyer, string>>` — выполняет валидацию первого шага оформления заказа (payment и address). Возвращает объект с ошибками
-`validateStep2(): Partial<Record<keyof IBuyer, string>>` — выполняет валидацию второго шага оформления заказа (email и phone). Возвращает объект с ошибками
+`validate(): Partial<Record<keyof IBuyer, string>>` — выполняет валидацию всех полей покупателя и возвращает объект с ошибками
 
 ### Слой коммуникации
 

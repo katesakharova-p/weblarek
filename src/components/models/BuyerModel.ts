@@ -1,12 +1,12 @@
-import { IBuyer, TPayment } from '../../types';
+import { IBuyer, TPayment } from "../../types";
 
 type ValidationErrors = Partial<Record<keyof IBuyer, string>>;
 
 export class BuyerModel {
   private _payment: TPayment | null = null;
-  private _email: string = '';
-  private _phone: string = '';
-  private _address: string = '';
+  private _email: string = "";
+  private _phone: string = "";
+  private _address: string = "";
 
   setData(data: Partial<IBuyer>): void {
     if (data.payment !== undefined) this._payment = data.payment;
@@ -26,46 +26,30 @@ export class BuyerModel {
 
   clear(): void {
     this._payment = null;
-    this._email = '';
-    this._phone = '';
-    this._address = '';
+    this._email = "";
+    this._phone = "";
+    this._address = "";
   }
 
-  // ✅ Шаг 1 — оплата + адрес
-  validateStep1(): ValidationErrors {
+  validate(): ValidationErrors {
     const errors: ValidationErrors = {};
 
     if (!this._payment) {
-      errors.payment = 'Не выбран способ оплаты';
+      errors.payment = "Не выбран способ оплаты";
     }
 
     if (!this._address) {
-      errors.address = 'Укажите адрес';
+      errors.address = "Укажите адрес";
     }
 
-    return errors;
-  }
-
-  // ✅ Шаг 2 — контакты
-  validateStep2(): ValidationErrors {
-    const errors: ValidationErrors = {};
-
     if (!this._email) {
-      errors.email = 'Укажите email';
+      errors.email = "Укажите email";
     }
 
     if (!this._phone) {
-      errors.phone = 'Укажите телефон';
+      errors.phone = "Укажите телефон";
     }
 
     return errors;
-  }
-
-  // (опционально) общая валидация
-  validate(): ValidationErrors {
-    return {
-      ...this.validateStep1(),
-      ...this.validateStep2(),
-    };
   }
 }
