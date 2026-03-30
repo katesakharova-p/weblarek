@@ -1,7 +1,6 @@
-import { IProduct } from "../../types";
-import { EventEmitter } from "../base/Events";
+import { IProduct } from '../../types';
 
-export class CartModel extends EventEmitter {
+export class CartModel {
   private _items: IProduct[] = [];
 
   getItems(): IProduct[] {
@@ -9,33 +8,32 @@ export class CartModel extends EventEmitter {
   }
 
   addItem(product: IProduct): void {
-    if (!this.contains(product.id)) {
+    // защита от добавления без цены
+    if (product.price === null) return;
+
+    const exists = this._items.some(item => item.id === product.id);
+    if (!exists) {
       this._items.push(product);
-      this.emit('cart:changed', this._items);
     }
   }
 
-  removeItem(productId: string): void {
-    this._items = this._items.filter((item) => item.id !== productId);
-    this.emit('cart:changed', this._items);
+  removeItem(product: IProduct): void {
+    this._items = this._items.filter(item => item.id !== product.id);
   }
 
   clear(): void {
     this._items = [];
-    this.emit('cart:changed', this._items);
   }
 
   getTotal(): number {
-    return this._items.reduce((sum, item) => {
-      return sum + (item.price ?? 0);
-    }, 0);
+    return this._items.reduce((sum, item) => sum + (item.price ?? 0), 0);
   }
 
-  getItemCount(): number {
+  getCount(): number {
     return this._items.length;
   }
 
-  contains(productId: string): boolean {
-    return this._items.some((item) => item.id === productId);
+  contains(id: string): boolean {
+    return this._items.some(item => item.id === id);
   }
 }
