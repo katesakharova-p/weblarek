@@ -125,6 +125,17 @@ interface IProduct {
 }
 ```
 
+`IProductsResponse`- Объект, который возвращается сервером при запросе списка товаров.
+
+``` ts
+interface IProductsResponse {
+  items: IProduct[];
+}
+```
+
+Поля:
+`items: IProduct[]` — массив товаров
+
 #### Покупатель (IBuyer)
 
 Интерфейс описывает данные покупателя, необходимые для оформления заказа.
@@ -137,6 +148,7 @@ interface IBuyer {
     address: string;     // Адрес доставки
 }
 ```
+
 #### Заказ (IOrder)
 
 Объект, отправляемый на сервер при оформлении заказа.
@@ -152,9 +164,7 @@ interface IOrder {
 }
 ``` 
 
-#### Заказ (IOrderResult)
-
-Ответ сервера после успешного оформления заказа.
+`IOrderResult` - Ответ сервера после успешного оформления заказа.
 
 ``` ts
 interface IOrderResult {
@@ -162,17 +172,6 @@ interface IOrderResult {
   total: number;        // Общая стоимость заказа
 }
 ```
-#### Ответ сервера с товарами
-
-Объект, который возвращается сервером при запросе списка товаров.
-
-``` ts
-interface IProductsResponse {
-  items: IProduct[];
-}
-```
-Поля:
-`items: IProduct[]` — массив товаров
 
 ### Тип способа оплаты
 
