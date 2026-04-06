@@ -21,17 +21,11 @@ console.log("Все товары:", productsModel.getProducts());
 
 const firstProduct = productsModel.getProducts()[0];
 
-console.log(
-  "Товар по id:",
-  productsModel.getProductById(firstProduct.id)
-);
+console.log("Товар по id:", productsModel.getProductById(firstProduct.id));
 
 productsModel.setSelectedProduct(firstProduct);
 
-console.log(
-  "Выбранный товар:",
-  productsModel.getSelectedProduct()
-);
+console.log("Выбранный товар:", productsModel.getSelectedProduct());
 
 // ==================== CartModel ====================
 console.log("\n========== CartModel ==========");
@@ -91,17 +85,31 @@ console.log("\n========== API ==========");
 
 const api = new WebLarekApi(new Api(API_URL));
 
-api.getProducts()
+api
+  .getProducts()
   .then((products) => {
     console.log("Товары с сервера:", products);
 
     productsModel.setProducts(products);
 
-    console.log(
-      "Каталог сохранен:",
-      productsModel.getProducts()
-    );
+    console.log("Каталог сохранен:", productsModel.getProducts());
   })
   .catch((error) => {
     console.error("Ошибка:", error);
   });
+
+// тест
+
+import { Modal } from "./components/view/Modal";
+import { EventEmitter } from "./components/base/Events";
+
+const events = new EventEmitter();
+
+const modalElement = document.getElementById("modal-container")!;
+
+const modal = new Modal(modalElement, events);
+
+const div = document.createElement("div");
+div.textContent = "Тестовая модалка";
+
+modal.open(div);
