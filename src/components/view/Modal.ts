@@ -1,5 +1,3 @@
-// src/components/view/Modal.ts
-
 import { IEvents } from "../base/Events";
 
 export class Modal {
