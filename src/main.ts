@@ -10,45 +10,47 @@ import { Api } from './components/base/Api';
 import { API_URL } from './utils/constants';
 
 import { CatalogView } from './components/view/CatalogView';
-import { BasketView } from './components/view/BasketView';
 import { Modal } from './components/view/Modal';
 
 import { Presenter } from './components/Presenter';
 
-// 🔹 события
+// события
 const events = new EventEmitter();
 
-// 🔹 API
+// API
 const api = new WebLarekApi(new Api(API_URL));
 
-// 🔹 модели
-const productsModel = new ProductsModel();
-const cartModel = new CartModel();
+// модели
+const productsModel = new ProductsModel(events);
+const cartModel = new CartModel(events);
 
-// 🔹 view
+// view
 const catalogContainer = document.querySelector('.gallery') as HTMLElement;
-const basketContainer = document.querySelector('.basket') as HTMLElement;
 const modalElement = document.getElementById('modal-container') as HTMLElement;
 
 const catalogView = new CatalogView(catalogContainer);
-const basketView = new BasketView(basketContainer);
 const modal = new Modal(modalElement, events);
 
-// 🔹 презентер
+// презентер
 new Presenter(
   events,
   productsModel,
   cartModel,
   catalogView,
-  basketView,
   modal
 );
 
-// 🔹 загрузка данных
+// загрузка данных
 api
   .getProducts()
   .then((products) => {
     productsModel.setProducts(products);
-    events.emit('catalog:changed');
   })
   .catch(console.error);
+
+// обработка клика по иконке корзины
+const basketButton = document.querySelector('.header__basket') as HTMLElement;
+
+basketButton.addEventListener('click', () => {
+  events.emit('basket:open');
+});

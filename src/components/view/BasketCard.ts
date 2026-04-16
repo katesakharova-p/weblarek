@@ -1,25 +1,42 @@
-import { Card } from './Card';
 import { IProduct } from '../../types';
 import { IEvents } from '../base/Events';
 
-export class BasketCard extends Card {
-  private deleteButton?: HTMLButtonElement;
+export class BasketCard {
+private container: HTMLElement;
+private title: HTMLElement;
+private price: HTMLElement;
+private deleteButton: HTMLButtonElement;
+private indexElement: HTMLElement;
 
-  constructor(container: HTMLElement, events: IEvents) {
-    super(container, events);
+private id!: string;
 
-    this.deleteButton = this.container.querySelector('.card__button') as HTMLButtonElement;
+constructor(container: HTMLElement, private events: IEvents) {
+this.container = container;
 
-    if (this.deleteButton) {
-      this.deleteButton.addEventListener('click', (evt) => {
-        evt.stopPropagation();
-        this.events.emit('basket:remove', { id: this.id });
-      });
-    }
-  }
 
-  render(data: IProduct): HTMLElement {
-    super.render(data);
-    return this.container;
-  }
+this.title = container.querySelector('.card__title')!;
+this.price = container.querySelector('.card__price')!;
+this.deleteButton = container.querySelector('.card__button')!;
+this.indexElement = container.querySelector('.basket__item-index')!;
+
+this.deleteButton.addEventListener('click', (evt) => {
+  evt.stopPropagation();
+  this.events.emit('basket:remove', { id: this.id });
+});
+
+
+}
+
+render(data: IProduct, index: number): HTMLElement {
+this.id = data.id;
+
+
+this.indexElement.textContent = String(index + 1);
+this.title.textContent = data.title;
+this.price.textContent = `${data.price ?? 0} синапсов`;
+
+return this.container;
+
+
+}
 }

@@ -1,4 +1,4 @@
-import { IEvents } from '../base/Events';
+import { IEvents } from "../base/Events";
 
 export abstract class BaseForm {
   protected form: HTMLFormElement;
@@ -8,9 +8,13 @@ export abstract class BaseForm {
     this.form = form;
     this.events = events;
 
-    this.form.addEventListener('submit', (e) => {
+    this.form.addEventListener("submit", (e: SubmitEvent) => {
       e.preventDefault();
       this.handleSubmit();
+    });
+
+    this.form.addEventListener("input", () => {
+      this.events.emit("form:change");
     });
   }
 

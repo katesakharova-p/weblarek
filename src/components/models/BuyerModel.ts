@@ -4,9 +4,9 @@ type ValidationErrors = Partial<Record<keyof IBuyer, string>>;
 
 export class BuyerModel {
   private _payment: TPayment | null = null;
-  private _email: string = "";
-  private _phone: string = "";
-  private _address: string = "";
+  private _email = "";
+  private _phone = "";
+  private _address = "";
 
   setData(data: Partial<IBuyer>): void {
     if (data.payment !== undefined) this._payment = data.payment;
@@ -34,20 +34,15 @@ export class BuyerModel {
   validate(): ValidationErrors {
     const errors: ValidationErrors = {};
 
-    if (!this._payment) {
-      errors.payment = "Не выбран способ оплаты";
+    if (!this._payment) errors.payment = "Выберите способ оплаты";
+    if (!this._address.trim()) errors.address = "Введите адрес";
+
+    if (!this._email.match(/^\S+@\S+\.\S+$/)) {
+      errors.email = "Некорректный email";
     }
 
-    if (!this._address) {
-      errors.address = "Укажите адрес";
-    }
-
-    if (!this._email) {
-      errors.email = "Укажите email";
-    }
-
-    if (!this._phone) {
-      errors.phone = "Укажите телефон";
+    if (!this._phone.match(/^\+?\d{10,}$/)) {
+      errors.phone = "Некорректный телефон";
     }
 
     return errors;
