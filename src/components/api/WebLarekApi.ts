@@ -14,11 +14,9 @@ export class WebLarekApi {
   }
 
   getProducts(): Promise<IProduct[]> {
-    return this.api
-      .get<IProductsResponse>(`/product`)
-      .then((data) => {
-        return data.items;
-      });
+    return this.api.get<IProductsResponse>(`/product`).then((data) => {
+      return data.items;
+    });
   }
 
   postOrder(order: IOrder): Promise<IOrderResult> {

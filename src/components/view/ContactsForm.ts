@@ -11,51 +11,41 @@ export class ContactsForm extends BaseForm {
     super(form, events);
 
     this.emailInput = form.querySelector(
-      'input[name="email"]'
+      'input[name="email"]',
     ) as HTMLInputElement;
 
     this.phoneInput = form.querySelector(
-      'input[name="phone"]'
+      'input[name="phone"]',
     ) as HTMLInputElement;
 
     this.submitButton = form.querySelector(
-      'button[type="submit"]'
+      'button[type="submit"]',
     ) as HTMLButtonElement;
 
     this.error = form.querySelector(".form__errors") as HTMLElement;
 
-    this.emailInput.addEventListener("input", () => this.validate());
-    this.phoneInput.addEventListener("input", () => this.validate());
+    this.emailInput.addEventListener("input", () => this.emitChange());
+    this.phoneInput.addEventListener("input", () => this.emitChange());
 
-    this.validate();
+    this.events.on("contacts:errors", (errors: any) => {
+      this.error.textContent = errors.email || errors.phone || "";
+
+      const isValid = !errors.email && !errors.phone;
+      this.submitButton.disabled = !isValid;
+    });
   }
 
-  private validate() {
-    let errorText = "";
-
-    const email = this.emailInput.value.trim();
-    const phone = this.phoneInput.value.trim();
-
-    if (!email) {
-      errorText = "Введите email";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errorText = "Некорректный email";
-    } else if (!phone) {
-      errorText = "Введите телефон";
-    }
-
-    this.error.textContent = errorText;
-    this.submitButton.disabled = !!errorText;
+  private emitChange() {
+    this.events.emit("contacts:change", {
+      email: this.emailInput.value.trim(),
+      phone: this.phoneInput.value.trim(),
+    });
   }
 
   protected handleSubmit(): void {
-    console.log("SUBMIT WORKS"); // 👈 временно для проверки
-
-    if (this.submitButton.disabled) return;
-
     this.events.emit("contacts:submit", {
-      email: this.emailInput.value,
-      phone: this.phoneInput.value,
+      email: this.emailInput.value.trim(),
+      phone: this.phoneInput.value.trim(),
     });
   }
 }

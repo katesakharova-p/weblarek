@@ -7,6 +7,8 @@ export class CartModel {
   constructor(private events: IEvents) {}
 
   addItem(product: IProduct) {
+    if (this.items.some((p) => p.id === product.id)) return;
+
     this.items.push(product);
     this.events.emit("cart:changed");
   }

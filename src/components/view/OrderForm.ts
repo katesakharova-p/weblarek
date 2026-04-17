@@ -1,74 +1,66 @@
 import { IEvents } from "../base/Events";
 import { BaseForm } from "./BaseForm";
+import { TPayment } from "../../types";
 
 export class OrderForm extends BaseForm {
   private addressInput: HTMLInputElement;
   private submitButton: HTMLButtonElement;
-  private error: HTMLElement;
   private paymentButtons: HTMLButtonElement[];
+  private error: HTMLElement;
 
-  private payment: string | null = null;
+  private payment: TPayment | null = null;
 
   constructor(form: HTMLFormElement, events: IEvents) {
     super(form, events);
 
     this.addressInput = form.querySelector(
-      'input[name="address"]'
+      'input[name="address"]',
     ) as HTMLInputElement;
 
     this.submitButton = form.querySelector(
-      'button[type="submit"]'
+      'button[type="submit"]',
     ) as HTMLButtonElement;
 
     this.error = form.querySelector(".form__errors") as HTMLElement;
 
     this.paymentButtons = Array.from(
-      form.querySelectorAll(".button_alt")
+      form.querySelectorAll(".button_alt"),
     ) as HTMLButtonElement[];
 
-    // выбор оплаты
     this.paymentButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
-        this.payment = btn.name;
+        this.payment = btn.name as TPayment;
 
-        // сброс активных
         this.paymentButtons.forEach((b) =>
-          b.classList.remove("button_alt-active")
+          b.classList.remove("button_alt-active"),
         );
 
-        // активная кнопка
         btn.classList.add("button_alt-active");
 
-        this.validate();
+        this.emitChange();
       });
     });
 
-    // ввод адреса
     this.addressInput.addEventListener("input", () => {
-      this.validate();
+      this.emitChange();
     });
 
-    this.validate();
+    this.events.on("order:errors", (errors: any) => {
+      this.error.textContent = errors.payment || errors.address || "";
+
+      const isValid = !errors.payment && !errors.address;
+      this.submitButton.disabled = !isValid;
+    });
   }
 
-  private validate() {
-    let errorText = "";
-
-    if (!this.payment) {
-      errorText = "Выберите способ оплаты";
-    } else if (!this.addressInput.value.trim()) {
-      errorText = "Необходимо указать адрес";
-    }
-
-    this.error.textContent = errorText;
-
-        this.submitButton.disabled = !!errorText;
+  private emitChange() {
+    this.events.emit("order:change", {
+      payment: this.payment,
+      address: this.addressInput.value.trim(),
+    });
   }
 
   protected handleSubmit(): void {
-  
-    if (this.submitButton.disabled) return;
-
     this.events.emit("order:submit", {
       payment: this.payment,
       address: this.addressInput.value.trim(),

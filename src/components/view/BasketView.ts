@@ -5,10 +5,15 @@ export class BasketView {
   private total: HTMLElement;
   private button: HTMLButtonElement;
 
-  constructor(private container: HTMLElement, private events: IEvents) {
+  constructor(
+    private container: HTMLElement,
+    private events: IEvents,
+  ) {
     this.list = this.container.querySelector(".basket__list") as HTMLElement;
     this.total = this.container.querySelector(".basket__price") as HTMLElement;
-    this.button = this.container.querySelector(".basket__button") as HTMLButtonElement;
+    this.button = this.container.querySelector(
+      ".basket__button",
+    ) as HTMLButtonElement;
 
     this.button.addEventListener("click", () => {
       this.events.emit("order:open");

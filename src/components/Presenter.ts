@@ -1,6 +1,7 @@
 import { IEvents } from "./base/Events";
 import { ProductsModel } from "./models/ProductsModel";
 import { CartModel } from "./models/CartModel";
+import { BuyerModel } from "./models/BuyerModel";
 
 import { CatalogView } from "./view/CatalogView";
 import { Modal } from "./view/Modal";
@@ -12,20 +13,25 @@ import { BasketView } from "./view/BasketView";
 import { OrderForm } from "./view/OrderForm";
 import { ContactsForm } from "./view/ContactsForm";
 
+import { WebLarekApi } from "./api/WebLarekApi";
+import { IProduct, TPayment } from "../types";
+
 export class Presenter {
   constructor(
     private events: IEvents,
     private productsModel: ProductsModel,
     private cartModel: CartModel,
+    private buyerModel: BuyerModel,
     private catalogView: CatalogView,
-    private modal: Modal
+    private modal: Modal,
+    private api: WebLarekApi,
   ) {
     this.subscribeEvents();
   }
 
   private subscribeEvents() {
     const counter = document.querySelector(
-      ".header__basket-counter"
+      ".header__basket-counter",
     ) as HTMLElement;
 
     // каталог
@@ -33,33 +39,16 @@ export class Presenter {
       this.renderCatalog();
     });
 
-    // счётчик корзины
+    // корзина
     this.events.on("cart:changed", () => {
-      if (counter) {
-        counter.textContent = String(this.cartModel.getCount());
-      }
+      counter.textContent = String(this.cartModel.getCount());
     });
 
-    // открыть карточку
+    // открыть товар
     this.events.on("card:select", (data: { id: string }) => {
       const product = this.productsModel.getProductById(data.id);
       if (!product) return;
-
-      const template = document.querySelector(
-        "#card-preview"
-      ) as HTMLTemplateElement;
-
-      const container = template.content.firstElementChild!.cloneNode(
-        true
-      ) as HTMLElement;
-
-      const isInCart = this.cartModel
-        .getItems()
-        .some((p) => p.id === product.id);
-
-      const card = new PreviewCard(container, this.events);
-
-      this.modal.open(card.render(product, isInCart));
+      this.openPreview(product);
     });
 
     // добавить / удалить
@@ -67,39 +56,18 @@ export class Presenter {
       const product = this.productsModel.getProductById(data.id);
       if (!product) return;
 
-      const exists = this.cartModel
-        .getItems()
-        .some((p) => p.id === product.id);
+      const exists = this.cartModel.getItems().some((p) => p.id === data.id);
 
-      if (exists) {
-        this.cartModel.removeItem(product);
-      } else {
-        this.cartModel.addItem(product);
-      }
+      exists
+        ? this.cartModel.removeItem(product)
+        : this.cartModel.addItem(product);
 
-      // перерисовка
-      const template = document.querySelector(
-        "#card-preview"
-      ) as HTMLTemplateElement;
-
-      const container = template.content.firstElementChild!.cloneNode(
-        true
-      ) as HTMLElement;
-
-      const isInCart = this.cartModel
-        .getItems()
-        .some((p) => p.id === product.id);
-
-      const card = new PreviewCard(container, this.events);
-
-      this.modal.open(card.render(product, isInCart));
+      this.openPreview(product);
     });
 
     // удалить из корзины
     this.events.on("basket:remove", (data: { id: string }) => {
-      const product = this.cartModel
-        .getItems()
-        .find((p) => p.id === data.id);
+      const product = this.cartModel.getItems().find((p) => p.id === data.id);
 
       if (!product) return;
 
@@ -112,119 +80,178 @@ export class Presenter {
       this.renderBasket();
     });
 
-    // шаг 1
+    // открыть форму заказа
     this.events.on("order:open", () => {
-      const template = document.querySelector(
-        "#order"
-      ) as HTMLTemplateElement;
-
-      const container = template.content.firstElementChild!.cloneNode(
-        true
-      ) as HTMLElement;
-
-      const form = new OrderForm(
-        container as HTMLFormElement,
-        this.events
-      );
-
-      this.modal.open(form.render());
+      this.openOrder();
     });
 
-    // шаг 2
-    this.events.on("order:submit", () => {
-      const template = document.querySelector(
-        "#contacts"
-      ) as HTMLTemplateElement;
+    // форма 1
+    this.events.on(
+      "order:submit",
+      (data: { payment: TPayment; address: string }) => {
+        this.buyerModel.setData(data);
 
-      const fragment = template.content.cloneNode(true) as DocumentFragment;
+        const errors = this.buyerModel.validate();
 
-      const formElement = fragment.querySelector("form") as HTMLFormElement;
+        if (errors.payment || errors.address) {
+          this.events.emit("order:errors", errors);
+          return;
+        }
 
-      const form = new ContactsForm(formElement, this.events);
+        this.openContacts();
+      },
+    );
 
-      this.modal.open(form.render());
+    this.events.on("order:change", (data) => {
+      this.buyerModel.setData(data);
+
+      const errors = this.buyerModel.validate();
+      this.events.emit("order:errors", errors);
     });
 
-    //  финал
-    this.events.on("contacts:submit", (data) => {
-      const total = this.cartModel.getTotal();
+    // форма 2
+    this.events.on(
+      "contacts:submit",
+      async (data: { email: string; phone: string }) => {
+        this.buyerModel.setData(data);
 
-      this.cartModel.clear();
+        const errors = this.buyerModel.validate();
 
-      const template = document.querySelector(
-        "#success"
-      ) as HTMLTemplateElement;
+        if (errors.email || errors.phone) {
+          this.events.emit("contacts:errors", errors);
+          return;
+        }
 
-      const container = template.content.firstElementChild!.cloneNode(
-        true
-      ) as HTMLElement;
+        const buyer = this.buyerModel.getData();
 
-      // сумма
-      const text = container.querySelector(
-        ".order-success__description"
-      ) as HTMLElement;
+        const order = {
+          ...buyer,
+          total: this.cartModel.getTotal(),
+          items: this.cartModel.getItems().map((p) => p.id),
+        };
 
-      text.textContent = `Списано ${total} синапсов`;
+        try {
+          await this.api.postOrder(order);
 
-      // кнопка
-      const button = container.querySelector(
-        ".order-success__close"
-      ) as HTMLButtonElement;
+          this.cartModel.clear();
+          this.buyerModel.clear();
 
-      button.addEventListener("click", () => {
-        this.modal.close();
-      });
+          this.showSuccess(order.total);
+        } catch (e) {
+          console.error(e);
+        }
+      },
+    );
 
-      this.modal.open(container);
+    this.events.on("contacts:change", (data) => {
+      this.buyerModel.setData(data);
+
+      const errors = this.buyerModel.validate();
+      this.events.emit("contacts:errors", errors);
     });
+  }
+
+  private openPreview(product: IProduct) {
+    const template = document.querySelector(
+      "#card-preview",
+    ) as HTMLTemplateElement;
+
+    const container = template.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+
+    const isInCart = this.cartModel.getItems().some((p) => p.id === product.id);
+
+    const card = new PreviewCard(container, this.events);
+
+    this.modal.open(card.render(product, isInCart));
+  }
+
+  private openOrder() {
+    const template = document.querySelector("#order") as HTMLTemplateElement;
+
+    const container = template.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+
+    const form = new OrderForm(container as HTMLFormElement, this.events);
+
+    this.modal.open(form.render());
+  }
+
+  private openContacts() {
+    const template = document.querySelector("#contacts") as HTMLTemplateElement;
+
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    const formElement = fragment.querySelector("form") as HTMLFormElement;
+
+    const form = new ContactsForm(formElement, this.events);
+
+    this.modal.open(form.render());
+  }
+
+  private showSuccess(total: number) {
+    const template = document.querySelector("#success") as HTMLTemplateElement;
+
+    const container = template.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+
+    const text = container.querySelector(
+      ".order-success__description",
+    ) as HTMLElement;
+
+    text.textContent = `Списано ${total} синапсов`;
+
+    const button = container.querySelector(
+      ".order-success__close",
+    ) as HTMLButtonElement;
+
+    button.addEventListener("click", () => {
+      this.modal.close();
+    });
+
+    this.modal.open(container);
   }
 
   private renderCatalog() {
     const template = document.querySelector(
-      "#card-catalog"
+      "#card-catalog",
     ) as HTMLTemplateElement;
 
     const items = this.productsModel.getProducts().map((product) => {
       const container = template.content.firstElementChild!.cloneNode(
-        true
+        true,
       ) as HTMLElement;
 
-      const card = new CatalogCard(container, this.events);
-
-      return card.render(product);
+      return new CatalogCard(container, this.events).render(product);
     });
 
     this.catalogView.render(items);
   }
 
   private renderBasket() {
-    const template = document.querySelector(
-      "#basket"
-    ) as HTMLTemplateElement;
+    const template = document.querySelector("#basket") as HTMLTemplateElement;
 
     const container = template.content.firstElementChild!.cloneNode(
-      true
+      true,
     ) as HTMLElement;
 
     const basketView = new BasketView(container, this.events);
 
     const items = this.cartModel.getItems().map((product, index) => {
       const itemTemplate = document.querySelector(
-        "#card-basket"
+        "#card-basket",
       ) as HTMLTemplateElement;
 
-      const itemContainer = itemTemplate.content.firstElementChild!.cloneNode(
-        true
+      const el = itemTemplate.content.firstElementChild!.cloneNode(
+        true,
       ) as HTMLElement;
 
-      const card = new BasketCard(itemContainer, this.events);
-
-      return card.render(product, index);
+      return new BasketCard(el, this.events).render(product, index);
     });
 
-    const total = this.cartModel.getTotal();
-
-    basketView.render(items, total);
+    basketView.render(items, this.cartModel.getTotal());
 
     this.modal.open(container);
   }
