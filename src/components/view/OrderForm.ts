@@ -1,40 +1,77 @@
-import { BaseForm } from "./BaseForm";
 import { IEvents } from "../base/Events";
+import { BaseForm } from "./BaseForm";
 
 export class OrderForm extends BaseForm {
-private addressInput: HTMLInputElement;
-private paymentButtons: NodeListOf<HTMLButtonElement>;
+  private addressInput: HTMLInputElement;
+  private submitButton: HTMLButtonElement;
+  private error: HTMLElement;
+  private paymentButtons: HTMLButtonElement[];
 
-constructor(form: HTMLFormElement, events: IEvents) {
-super(form, events);
+  private payment: string | null = null;
 
+  constructor(form: HTMLFormElement, events: IEvents) {
+    super(form, events);
 
-this.addressInput = this.form.querySelector(
-  "input[name='address']"
-) as HTMLInputElement;
+    this.addressInput = form.querySelector(
+      'input[name="address"]'
+    ) as HTMLInputElement;
 
-this.paymentButtons = this.form.querySelectorAll(".button_alt");
+    this.submitButton = form.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
 
-this.paymentButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    this.paymentButtons.forEach((b) =>
-      b.classList.remove("button_alt-active")
-    );
+    this.error = form.querySelector(".form__errors") as HTMLElement;
 
-    btn.classList.add("button_alt-active");
+    this.paymentButtons = Array.from(
+      form.querySelectorAll(".button_alt")
+    ) as HTMLButtonElement[];
 
-    this.events.emit("order:payment", {
-      method: btn.name,
+    // выбор оплаты
+    this.paymentButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        this.payment = btn.name;
+
+        // сброс активных
+        this.paymentButtons.forEach((b) =>
+          b.classList.remove("button_alt-active")
+        );
+
+        // активная кнопка
+        btn.classList.add("button_alt-active");
+
+        this.validate();
+      });
     });
-  });
-});
 
+    // ввод адреса
+    this.addressInput.addEventListener("input", () => {
+      this.validate();
+    });
 
-}
+    this.validate();
+  }
 
-protected handleSubmit(): void {
-this.events.emit("order:submit", {
-address: this.addressInput.value,
-});
-}
+  private validate() {
+    let errorText = "";
+
+    if (!this.payment) {
+      errorText = "Выберите способ оплаты";
+    } else if (!this.addressInput.value.trim()) {
+      errorText = "Необходимо указать адрес";
+    }
+
+    this.error.textContent = errorText;
+
+        this.submitButton.disabled = !!errorText;
+  }
+
+  protected handleSubmit(): void {
+  
+    if (this.submitButton.disabled) return;
+
+    this.events.emit("order:submit", {
+      payment: this.payment,
+      address: this.addressInput.value.trim(),
+    });
+  }
 }
