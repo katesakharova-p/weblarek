@@ -13,9 +13,10 @@ export abstract class BaseForm {
       this.handleSubmit();
     });
 
-    this.form.addEventListener("input", () => {
-      this.events.emit("form:change");
-    });
+    this.form.addEventListener('input', () => {
+  const isValid = this.form.checkValidity();
+  this.events.emit('form:change', { valid: isValid });
+});
   }
 
   protected abstract handleSubmit(): void;
@@ -23,4 +24,6 @@ export abstract class BaseForm {
   render(): HTMLElement {
     return this.form;
   }
+
+  
 }

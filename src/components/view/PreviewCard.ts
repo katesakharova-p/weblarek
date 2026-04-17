@@ -1,56 +1,39 @@
-import { Card } from "./Card";
-import { IProduct } from "../../types";
 import { IEvents } from "../base/Events";
-import { categoryMap } from "../../utils/constants";
+import { IProduct } from "../../types";
 
-export class PreviewCard extends Card {
-  private image: HTMLImageElement;
-  private category: HTMLElement;
-  private description: HTMLElement;
+export class PreviewCard {
+private title: HTMLElement;
+private image: HTMLImageElement;
+private description: HTMLElement;
+private button: HTMLButtonElement;
+private price: HTMLElement;
 
-  constructor(container: HTMLElement, events: IEvents) {
-    super(container, events);
+constructor(private container: HTMLElement, private events: IEvents) {
+this.title = container.querySelector(".card__title")!;
+this.image = container.querySelector(".card__image")!;
+this.description = container.querySelector(".card__text")!;
+this.button = container.querySelector(".card__button")!;
+this.price = container.querySelector(".card__price")!;
+}
 
-    this.image = container.querySelector(".card__image")!;
-    this.category = container.querySelector(".card__category")!;
-    this.description = container.querySelector(".card__text")!;
-  }
+render(product: IProduct, inCart: boolean): HTMLElement {
+this.title.textContent = product.title;
+this.description.textContent = product.description;
+this.image.src = `/images/${product.image}`;
+this.image.alt = product.title;
+this.price.textContent = `${product.price} синапсов`;
 
-  render(data: IProduct): HTMLElement {
-    super.render(data);
 
-    this.setImage(data.image, data.title);
-    this.setCategory(data.category);
-    this.setDescription(data.description);
+this.button.textContent = inCart
+  ? "Удалить из корзины"
+  : "В корзину";
 
-    this.updateButton(data.price);
+this.button.onclick = () => {
+  this.events.emit("card:action", { id: product.id });
+};
 
-    return this.container;
-  }
+return this.container;
 
-  private setImage(src: string, alt: string): void {
-    this.image.src = src;
-    this.image.alt = alt;
-  }
 
-  private setCategory(category: string): void {
-    this.category.textContent = category;
-    this.category.className = `card__category ${categoryMap[category as keyof typeof categoryMap]}`;
-  }
-
-  private setDescription(text: string): void {
-    this.description.textContent = text;
-  }
-
-  private updateButton(price: number | null): void {
-    if (!this.button) return;
-
-    if (price === null) {
-      this.button.disabled = true;
-      this.button.textContent = "Недоступно";
-    } else {
-      this.button.disabled = false;
-      this.button.textContent = "В корзину";
-    }
-  }
+}
 }

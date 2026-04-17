@@ -4,6 +4,7 @@ import { CartModel } from "./models/CartModel";
 
 import { CatalogView } from "./view/CatalogView";
 import { Modal } from "./view/Modal";
+import { OrderForm } from "./view/OrderForm";
 
 import { CatalogCard } from "./view/CatalogCard";
 import { PreviewCard } from "./view/PreviewCard";
@@ -26,7 +27,6 @@ const counter = document.querySelector(
 ".header__basket-counter"
 ) as HTMLElement;
 
-
 this.events.on("products:changed", () => {
   this.renderCatalog();
 });
@@ -35,6 +35,7 @@ this.events.on("cart:changed", () => {
   if (counter) {
     counter.textContent = String(this.cartModel.getCount());
   }
+  this.renderBasket(); // 🔥 обновление корзины
 });
 
 this.events.on("card:select", (data: { id: string }) => {
@@ -51,14 +52,26 @@ this.events.on("card:select", (data: { id: string }) => {
 
   const card = new PreviewCard(container, this.events);
 
-  this.modal.open(card.render(product));
+  const isInCart = this.cartModel
+    .getItems()
+    .some((p) => p.id === product.id);
+
+  this.modal.open(card.render(product, isInCart));
 });
 
 this.events.on("card:action", (data: { id: string }) => {
   const product = this.productsModel.getProductById(data.id);
   if (!product) return;
 
-  this.cartModel.addItem(product);
+  const exists = this.cartModel
+    .getItems()
+    .some((p) => p.id === product.id);
+
+  if (exists) {
+    this.cartModel.removeItem(product);
+  } else {
+    this.cartModel.addItem(product);
+  }
 });
 
 this.events.on("basket:remove", (data: { id: string }) => {
@@ -68,11 +81,19 @@ this.events.on("basket:remove", (data: { id: string }) => {
   this.cartModel.removeItem(product);
 });
 
-// 🔥 ВАЖНО: правильный вызов
 this.events.on("basket:open", () => {
   this.renderBasket();
 });
 
+this.events.on("order:open", () => {
+  const template = document.querySelector("#order") as HTMLTemplateElement;
+
+  const container = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+
+  const form = new OrderForm(container as HTMLFormElement, this.events);
+
+  this.modal.open(form.render());
+});
 
 }
 
@@ -92,12 +113,10 @@ const items = this.productsModel.getProducts().map((product) => {
 
 this.catalogView.render(items);
 
-
 }
 
 private renderBasket(): void {
 const template = document.querySelector("#basket") as HTMLTemplateElement;
-
 
 const container = template.content.firstElementChild!.cloneNode(
   true
@@ -123,7 +142,6 @@ const total = this.cartModel.getTotal();
 basketView.render(items, total);
 
 this.modal.open(container);
-
 
 }
 }
