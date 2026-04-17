@@ -21,27 +21,25 @@ export class PreviewCard {
     this.price = container.querySelector(".card__price")!;
   }
 
-  render(product: IProduct, isInCart: boolean): HTMLElement {
+  render(
+    product: IProduct,
+    isInCart: boolean,
+    isAvailable: boolean,
+  ): HTMLElement {
     this.title.textContent = product.title;
     this.description.textContent = product.description;
-
-    // картинка
     this.image.src = `${CDN_URL}${product.image}`;
 
-    // если нет цены
-    if (product.price === null) {
-      this.price.textContent = "Бесценно";
+    this.price.textContent =
+      product.price === null ? "Бесценно" : `${product.price} синапсов`;
+
+    this.button.disabled = !isAvailable;
+
+    if (!isAvailable) {
       this.button.textContent = "Недоступно";
-      this.button.disabled = true;
-      return this.container;
+    } else {
+      this.button.textContent = isInCart ? "Удалить из корзины" : "В корзину";
     }
-
-    // если есть цена
-    this.price.textContent = `${product.price} синапсов`;
-
-    this.button.disabled = false;
-
-    this.button.textContent = isInCart ? "Удалить из корзины" : "В корзину";
 
     this.button.onclick = () => {
       this.events.emit("card:action", { id: product.id });

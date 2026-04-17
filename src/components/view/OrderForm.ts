@@ -41,22 +41,26 @@ export class OrderForm extends BaseForm {
       });
     });
 
-    this.addressInput.addEventListener("input", () => {
-      this.emitChange();
-    });
-
-    this.events.on("order:errors", (errors: any) => {
-      this.error.textContent = errors.payment || errors.address || "";
-
-      const isValid = !errors.payment && !errors.address;
-      this.submitButton.disabled = !isValid;
-    });
+    this.addressInput.addEventListener("input", () => this.emitChange());
   }
 
   private emitChange() {
+    const address = this.addressInput.value.trim();
+
+    let error = "";
+
+    if (!this.payment) error = "Выберите способ оплаты";
+    else if (!address) error = "Введите адрес";
+
+    this.error.textContent = error;
+
+    const isValid = this.payment !== null && address !== "";
+
+    this.submitButton.disabled = !isValid;
+
     this.events.emit("order:change", {
       payment: this.payment,
-      address: this.addressInput.value.trim(),
+      address,
     });
   }
 

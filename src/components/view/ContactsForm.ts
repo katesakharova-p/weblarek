@@ -26,20 +26,27 @@ export class ContactsForm extends BaseForm {
 
     this.emailInput.addEventListener("input", () => this.emitChange());
     this.phoneInput.addEventListener("input", () => this.emitChange());
-
-    this.events.on("contacts:errors", (errors: any) => {
-      this.error.textContent = errors.email || errors.phone || "";
-
-      const isValid = !errors.email && !errors.phone;
-      this.submitButton.disabled = !isValid;
-    });
   }
 
   private emitChange() {
-    this.events.emit("contacts:change", {
-      email: this.emailInput.value.trim(),
-      phone: this.phoneInput.value.trim(),
-    });
+    const email = this.emailInput.value.trim();
+    const phone = this.phoneInput.value.trim();
+
+    let error = "";
+
+    if (!email || !email.match(/^\S+@\S+\.\S+$/)) {
+      error = "Некорректный email";
+    } else if (!phone || !phone.match(/^\+?\d{10,}$/)) {
+      error = "Некорректный телефон";
+    }
+
+    this.error.textContent = error;
+
+    const isValid = email !== "" && phone !== "" && error === "";
+
+    this.submitButton.disabled = !isValid;
+
+    this.events.emit("contacts:change", { email, phone });
   }
 
   protected handleSubmit(): void {

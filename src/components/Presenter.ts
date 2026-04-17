@@ -51,7 +51,7 @@ export class Presenter {
       this.openPreview(product);
     });
 
-    // добавить / удалить
+    // добавить / удалить товар
     this.events.on("card:action", (data: { id: string }) => {
       const product = this.productsModel.getProductById(data.id);
       if (!product) return;
@@ -62,13 +62,12 @@ export class Presenter {
         ? this.cartModel.removeItem(product)
         : this.cartModel.addItem(product);
 
-      this.openPreview(product);
+      this.modal.close();
     });
 
     // удалить из корзины
     this.events.on("basket:remove", (data: { id: string }) => {
       const product = this.cartModel.getItems().find((p) => p.id === data.id);
-
       if (!product) return;
 
       this.cartModel.removeItem(product);
@@ -85,7 +84,7 @@ export class Presenter {
       this.openOrder();
     });
 
-    // форма 1
+    // шаг 1
     this.events.on(
       "order:submit",
       (data: { payment: TPayment; address: string }) => {
@@ -94,7 +93,6 @@ export class Presenter {
         const errors = this.buyerModel.validate();
 
         if (errors.payment || errors.address) {
-          this.events.emit("order:errors", errors);
           return;
         }
 
@@ -104,12 +102,9 @@ export class Presenter {
 
     this.events.on("order:change", (data) => {
       this.buyerModel.setData(data);
-
-      const errors = this.buyerModel.validate();
-      this.events.emit("order:errors", errors);
     });
 
-    // форма 2
+    // шаг 2
     this.events.on(
       "contacts:submit",
       async (data: { email: string; phone: string }) => {
@@ -118,7 +113,6 @@ export class Presenter {
         const errors = this.buyerModel.validate();
 
         if (errors.email || errors.phone) {
-          this.events.emit("contacts:errors", errors);
           return;
         }
 
@@ -131,12 +125,12 @@ export class Presenter {
         };
 
         try {
-          await this.api.postOrder(order);
+          const result = await this.api.postOrder(order);
 
           this.cartModel.clear();
           this.buyerModel.clear();
 
-          this.showSuccess(order.total);
+          this.showSuccess(result.total);
         } catch (e) {
           console.error(e);
         }
@@ -145,9 +139,6 @@ export class Presenter {
 
     this.events.on("contacts:change", (data) => {
       this.buyerModel.setData(data);
-
-      const errors = this.buyerModel.validate();
-      this.events.emit("contacts:errors", errors);
     });
   }
 
@@ -162,9 +153,11 @@ export class Presenter {
 
     const isInCart = this.cartModel.getItems().some((p) => p.id === product.id);
 
+    const isAvailable = product.price !== null;
+
     const card = new PreviewCard(container, this.events);
 
-    this.modal.open(card.render(product, isInCart));
+    this.modal.open(card.render(product, isInCart, isAvailable));
   }
 
   private openOrder() {
@@ -209,6 +202,7 @@ export class Presenter {
 
     button.addEventListener("click", () => {
       this.modal.close();
+      this.renderCatalog();
     });
 
     this.modal.open(container);

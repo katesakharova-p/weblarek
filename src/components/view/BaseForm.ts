@@ -13,9 +13,7 @@ export abstract class BaseForm {
       this.handleSubmit();
     });
 
-    this.form.addEventListener("input", () => {
-      this.events.emit("form:change");
-    });
+    this.form.addEventListener("input", () => {});
   }
 
   protected abstract handleSubmit(): void;
