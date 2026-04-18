@@ -1,39 +1,28 @@
+import { Card } from "./Card";
 import { IProduct } from "../../types";
-import { IEvents } from "../base/Events";
 
-export class BasketCard {
-  private container: HTMLElement;
-  private title: HTMLElement;
-  private price: HTMLElement;
-  private deleteButton: HTMLButtonElement;
+export class BasketCard extends Card<IProduct> {
   private indexElement: HTMLElement;
+  private button: HTMLButtonElement;
 
-  private id!: string;
+  constructor(container: HTMLElement, actions: { onRemove: () => void }) {
+    super(container);
 
-  constructor(
-    container: HTMLElement,
-    private events: IEvents,
-  ) {
-    this.container = container;
-
-    this.title = container.querySelector(".card__title")!;
-    this.price = container.querySelector(".card__price")!;
-    this.deleteButton = container.querySelector(".card__button")!;
     this.indexElement = container.querySelector(".basket__item-index")!;
+    this.button = container.querySelector(".basket__item-delete")!;
 
-    this.deleteButton.addEventListener("click", (evt) => {
+    this.button.addEventListener("click", (evt) => {
       evt.stopPropagation();
-      this.events.emit("basket:remove", { id: this.id });
+      actions.onRemove();
     });
   }
 
-  render(data: IProduct, index: number): HTMLElement {
-    this.id = data.id;
+  set index(value: number) {
+    this.indexElement.textContent = String(value + 1);
+  }
 
-    this.indexElement.textContent = String(index + 1);
-    this.title.textContent = data.title;
-    this.price.textContent = `${data.price ?? 0} синапсов`;
-
-    return this.container;
+  set data(data: IProduct) {
+    this.setTitle(data.title);
+    this.setPrice(data.price);
   }
 }

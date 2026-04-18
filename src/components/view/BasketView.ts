@@ -1,16 +1,21 @@
+import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 
-export class BasketView {
+export class BasketView extends Component<null> {
   private list: HTMLElement;
-  private total: HTMLElement;
+  private totalElement: HTMLElement;
   private button: HTMLButtonElement;
 
   constructor(
-    private container: HTMLElement,
+    container: HTMLElement,
     private events: IEvents,
   ) {
+    super(container);
+
     this.list = this.container.querySelector(".basket__list") as HTMLElement;
-    this.total = this.container.querySelector(".basket__price") as HTMLElement;
+    this.totalElement = this.container.querySelector(
+      ".basket__price",
+    ) as HTMLElement;
     this.button = this.container.querySelector(
       ".basket__button",
     ) as HTMLButtonElement;
@@ -20,15 +25,19 @@ export class BasketView {
     });
   }
 
-  render(items: HTMLElement[], total: number) {
-    if (items.length === 0) {
-      this.list.innerHTML = "<p>Корзина пуста</p>";
-      this.button.disabled = true;
-    } else {
-      this.list.replaceChildren(...items);
-      this.button.disabled = false;
-    }
+  set items(items: HTMLElement[]) {
+    this.list.replaceChildren(...items);
+  }
 
-    this.total.textContent = `${total} синапсов`;
+  set total(value: number) {
+    this.totalElement.textContent = `${value} синапсов`;
+  }
+
+  set valid(value: boolean) {
+    this.button.disabled = !value;
+  }
+
+  getContainer(): HTMLElement {
+    return this.container;
   }
 }

@@ -1,11 +1,10 @@
 import { IEvents } from "../base/Events";
 import { BaseForm } from "./BaseForm";
+import { IBuyer } from "../../types";
 
-export class ContactsForm extends BaseForm {
+export class ContactsForm extends BaseForm<IBuyer> {
   private emailInput: HTMLInputElement;
   private phoneInput: HTMLInputElement;
-  private submitButton: HTMLButtonElement;
-  private error: HTMLElement;
 
   constructor(form: HTMLFormElement, events: IEvents) {
     super(form, events);
@@ -18,41 +17,31 @@ export class ContactsForm extends BaseForm {
       'input[name="phone"]',
     ) as HTMLInputElement;
 
-    this.submitButton = form.querySelector(
-      'button[type="submit"]',
-    ) as HTMLButtonElement;
+    this.emailInput.addEventListener("input", () => {
+      this.events.emit("contacts:change", {
+        email: this.emailInput.value,
+      });
+    });
 
-    this.error = form.querySelector(".form__errors") as HTMLElement;
-
-    this.emailInput.addEventListener("input", () => this.emitChange());
-    this.phoneInput.addEventListener("input", () => this.emitChange());
+    this.phoneInput.addEventListener("input", () => {
+      this.events.emit("contacts:change", {
+        phone: this.phoneInput.value,
+      });
+    });
   }
 
-  private emitChange() {
-    const email = this.emailInput.value.trim();
-    const phone = this.phoneInput.value.trim();
+  set email(value: string) {
+    this.emailInput.value = value;
+  }
 
-    let error = "";
-
-    if (!email || !email.match(/^\S+@\S+\.\S+$/)) {
-      error = "Некорректный email";
-    } else if (!phone || !phone.match(/^\+?\d{10,}$/)) {
-      error = "Некорректный телефон";
-    }
-
-    this.error.textContent = error;
-
-    const isValid = email !== "" && phone !== "" && error === "";
-
-    this.submitButton.disabled = !isValid;
-
-    this.events.emit("contacts:change", { email, phone });
+  set phone(value: string) {
+    this.phoneInput.value = value;
   }
 
   protected handleSubmit(): void {
     this.events.emit("contacts:submit", {
-      email: this.emailInput.value.trim(),
-      phone: this.phoneInput.value.trim(),
+      email: this.emailInput.value,
+      phone: this.phoneInput.value,
     });
   }
 }

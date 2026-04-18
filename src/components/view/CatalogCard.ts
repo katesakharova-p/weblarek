@@ -1,15 +1,16 @@
 import { Card } from "./Card";
 import { IProduct } from "../../types";
-import { IEvents } from "../base/Events";
 
-export class CatalogCard extends Card {
-  constructor(container: HTMLElement, events: IEvents) {
-    super(container, events);
+export class CatalogCard extends Card<IProduct> {
+  constructor(container: HTMLElement, actions: { onClick: () => void }) {
+    super(container);
+
+    this.container.addEventListener("click", actions.onClick);
   }
 
-  render(data: IProduct): HTMLElement {
-    super.render(data);
-
-    return this.container;
+  set data(data: IProduct) {
+    this.setTitle(data.title);
+    this.setPrice(data.price);
+    this.setCategory(data.category);
   }
 }

@@ -23,6 +23,10 @@ export class CartModel {
     this.events.emit("cart:changed");
   }
 
+  hasItem(productId: string): boolean {
+    return this.items.some((p) => p.id === productId);
+  }
+
   getItems() {
     return this.items;
   }

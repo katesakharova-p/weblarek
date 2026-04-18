@@ -10,30 +10,52 @@ import { WebLarekApi } from "./components/api/WebLarekApi";
 import { Api } from "./components/base/Api";
 import { API_URL } from "./utils/constants";
 
+import { Header } from "./components/view/Header";
 import { CatalogView } from "./components/view/CatalogView";
 import { Modal } from "./components/view/Modal";
+import { BasketView } from "./components/view/BasketView";
+import { OrderForm } from "./components/view/OrderForm";
+import { ContactsForm } from "./components/view/ContactsForm";
+import { PreviewCard } from "./components/view/PreviewCard";
+import { SuccessView } from "./components/view/SuccessView";
 
-import { Presenter } from "./components/Presenter";
+import { cloneTemplate } from "./utils/utils";
 
-// события
+import { Presenter } from "./Presenter";
+
 const events = new EventEmitter();
 
-// API
 const api = new WebLarekApi(new Api(API_URL));
 
-// модели
 const productsModel = new ProductsModel(events);
 const cartModel = new CartModel(events);
-const buyerModel = new BuyerModel(events); // ✅ ДОБАВИЛИ
+const buyerModel = new BuyerModel(events);
 
-// view
 const catalogContainer = document.querySelector(".gallery") as HTMLElement;
 const modalElement = document.getElementById("modal-container") as HTMLElement;
 
+const header = new Header(document.body, events);
 const catalogView = new CatalogView(catalogContainer);
 const modal = new Modal(modalElement, events);
 
-// презентер
+const previewCard = new PreviewCard(cloneTemplate("#card-preview"), {
+  onClick: () => events.emit("preview:action"),
+});
+
+const basketView = new BasketView(cloneTemplate("#basket"), events);
+
+const orderForm = new OrderForm(
+  cloneTemplate("#order") as HTMLFormElement,
+  events,
+);
+
+const contactsForm = new ContactsForm(
+  cloneTemplate("#contacts") as HTMLFormElement,
+  events,
+);
+
+const successView = new SuccessView(cloneTemplate("#success"), events);
+
 new Presenter(
   events,
   productsModel,
@@ -41,20 +63,18 @@ new Presenter(
   buyerModel,
   catalogView,
   modal,
+  header,
   api,
+  previewCard,
+  basketView,
+  orderForm,
+  contactsForm,
+  successView,
 );
 
-// загрузка данных
 api
   .getProducts()
   .then((products) => {
     productsModel.setProducts(products);
   })
   .catch(console.error);
-
-// корзина
-const basketButton = document.querySelector(".header__basket") as HTMLElement;
-
-basketButton.addEventListener("click", () => {
-  events.emit("basket:open");
-});

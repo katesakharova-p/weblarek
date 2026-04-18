@@ -1,50 +1,18 @@
-import { IEvents } from "../base/Events";
-import { IProduct } from "../../types";
+import { Component } from "../base/Component";
 import { categoryMap } from "../../utils/constants";
 
-export abstract class Card {
-  protected container: HTMLElement;
+export abstract class Card<T> extends Component<T> {
   protected title: HTMLElement;
   protected price: HTMLElement;
-  protected button?: HTMLButtonElement;
   protected category?: HTMLElement;
 
-  protected id!: string;
+  constructor(container: HTMLElement) {
+    super(container);
 
-  constructor(
-    container: HTMLElement,
-    protected events: IEvents,
-  ) {
-    this.container = container;
-
-    this.title = container.querySelector(".card__title")!;
-    this.price = container.querySelector(".card__price")!;
-    this.button = container.querySelector(".card__button") || undefined;
-    this.category = container.querySelector(".card__category") || undefined;
-
-    this.container.addEventListener("click", () => {
-      this.events.emit("card:select", { id: this.id });
-    });
-
-    if (this.button) {
-      this.button.addEventListener("click", (evt) => {
-        evt.stopPropagation();
-
-        this.events.emit("card:action", {
-          id: this.id,
-        });
-      });
-    }
-  }
-
-  render(data: IProduct): HTMLElement {
-    this.id = data.id;
-
-    this.setTitle(data.title);
-    this.setPrice(data.price);
-    this.setCategory(data.category);
-
-    return this.container;
+    this.title = this.container.querySelector(".card__title")!;
+    this.price = this.container.querySelector(".card__price")!;
+    this.category =
+      this.container.querySelector(".card__category") || undefined;
   }
 
   protected setTitle(value: string): void {
@@ -60,8 +28,9 @@ export abstract class Card {
 
     this.category.textContent = category;
 
-    const className = categoryMap[category as keyof typeof categoryMap];
+    this.category.classList.remove(...Object.values(categoryMap));
 
+    const className = categoryMap[category as keyof typeof categoryMap];
     if (className) {
       this.category.classList.add(className);
     }

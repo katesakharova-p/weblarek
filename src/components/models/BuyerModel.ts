@@ -22,7 +22,7 @@ export class BuyerModel {
 
   getData(): IBuyer {
     return {
-      payment: this._payment as TPayment,
+      payment: this._payment,
       email: this._email,
       phone: this._phone,
       address: this._address,
@@ -35,21 +35,34 @@ export class BuyerModel {
     this._phone = "";
     this._address = "";
 
-    this.events.emit("buyer:changed");
+    this.events.emit("buyer:changed", this.getData());
   }
 
-  validate(): ValidationErrors {
+  // ШАГ 1
+  validateOrder(): ValidationErrors {
     const errors: ValidationErrors = {};
 
-    if (!this._payment) errors.payment = "Выберите способ оплаты";
-    if (!this._address.trim()) errors.address = "Введите адрес";
-
-    if (!this._email.match(/^\S+@\S+\.\S+$/)) {
-      errors.email = "Некорректный email";
+    if (!this._payment) {
+      errors.payment = "Выберите способ оплаты";
     }
 
-    if (!this._phone.match(/^\+?\d{10,}$/)) {
-      errors.phone = "Некорректный телефон";
+    if (!this._address.trim()) {
+      errors.address = "Необходимо указать адрес доставки";
+    }
+
+    return errors;
+  }
+
+  // ШАГ 2
+  validateContacts(): ValidationErrors {
+    const errors: ValidationErrors = {};
+
+    if (!this._email.trim()) {
+      errors.email = "Введите email";
+    }
+
+    if (!this._phone.trim()) {
+      errors.phone = "Введите телефон";
     }
 
     return errors;

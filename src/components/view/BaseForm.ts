@@ -1,24 +1,36 @@
+import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 
-export abstract class BaseForm {
-  protected form: HTMLFormElement;
+export abstract class BaseForm<T> extends Component<T> {
   protected events: IEvents;
+  protected submitButton: HTMLButtonElement;
+  protected errorElement: HTMLElement;
 
-  constructor(form: HTMLFormElement, events: IEvents) {
-    this.form = form;
+  constructor(container: HTMLFormElement, events: IEvents) {
+    super(container);
+
     this.events = events;
 
-    this.form.addEventListener("submit", (e) => {
+    this.submitButton = container.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
+
+    this.errorElement = container.querySelector(".form__errors") as HTMLElement;
+
+    container.addEventListener("submit", (e) => {
       e.preventDefault();
       this.handleSubmit();
     });
+  }
 
-    this.form.addEventListener("input", () => {});
+  set errors(value: Record<string, string>) {
+    const messages = Object.values(value).filter(Boolean);
+    this.errorElement.innerHTML = messages.join("<br>");
+  }
+
+  set valid(value: boolean) {
+    this.submitButton.disabled = !value;
   }
 
   protected abstract handleSubmit(): void;
-
-  render(): HTMLFormElement {
-    return this.form;
-  }
 }

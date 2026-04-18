@@ -1,50 +1,49 @@
 import { IProduct } from "../../types";
-import { IEvents } from "../base/Events";
+import { Card } from "./Card";
 
-const CDN_URL = "https://larek-api.nomoreparties.co/content/weblarek";
-
-export class PreviewCard {
+export class PreviewCard extends Card<IProduct> {
   private image: HTMLImageElement;
-  private title: HTMLElement;
   private description: HTMLElement;
   private button: HTMLButtonElement;
-  private price: HTMLElement;
 
-  constructor(
-    private container: HTMLElement,
-    private events: IEvents,
-  ) {
+  constructor(container: HTMLElement, actions: { onClick: () => void }) {
+    super(container);
+
     this.image = container.querySelector(".card__image")!;
-    this.title = container.querySelector(".card__title")!;
     this.description = container.querySelector(".card__text")!;
     this.button = container.querySelector(".card__button")!;
-    this.price = container.querySelector(".card__price")!;
+
+    this.button.addEventListener("click", (e) => {
+      e.stopPropagation();
+      actions.onClick();
+    });
   }
 
-  render(
-    product: IProduct,
-    isInCart: boolean,
-    isAvailable: boolean,
-  ): HTMLElement {
-    this.title.textContent = product.title;
-    this.description.textContent = product.description;
-    this.image.src = `${CDN_URL}${product.image}`;
+  set data(data: IProduct) {
+    this.setTitle(data.title);
+    this.setPrice(data.price);
+    this.setCategory(data.category);
 
-    this.price.textContent =
-      product.price === null ? "Бесценно" : `${product.price} синапсов`;
+    this.description.textContent = data.description;
 
+    this.image.src = data.image;
+    this.image.alt = data.title;
+  }
+
+  set buttonState({
+    isInCart,
+    isAvailable,
+  }: {
+    isInCart: boolean;
+    isAvailable: boolean;
+  }) {
     this.button.disabled = !isAvailable;
 
     if (!isAvailable) {
       this.button.textContent = "Недоступно";
-    } else {
-      this.button.textContent = isInCart ? "Удалить из корзины" : "В корзину";
+      return;
     }
 
-    this.button.onclick = () => {
-      this.events.emit("card:action", { id: product.id });
-    };
-
-    return this.container;
+    this.button.textContent = isInCart ? "Удалить из корзины" : "В корзину";
   }
 }

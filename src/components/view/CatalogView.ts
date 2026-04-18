@@ -1,11 +1,12 @@
-export class CatalogView {
-  private container: HTMLElement;
+import { Component } from "../base/Component";
 
+export class CatalogView extends Component<HTMLElement[]> {
   constructor(container: HTMLElement) {
-    this.container = container;
+    super(container);
   }
 
-  render(items: HTMLElement[]): void {
+  render(items: HTMLElement[]): HTMLElement {
     this.container.replaceChildren(...items);
+    return this.container;
   }
 }
