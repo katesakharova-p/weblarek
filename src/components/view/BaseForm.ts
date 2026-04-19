@@ -1,7 +1,12 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 
-export abstract class BaseForm<T> extends Component<T> {
+export interface IBaseForm {
+  errors: string;
+  valid: boolean;
+}
+
+export abstract class BaseForm<T> extends Component<IBaseForm & T> {
   protected events: IEvents;
   protected submitButton: HTMLButtonElement;
   protected errorElement: HTMLElement;
@@ -12,10 +17,12 @@ export abstract class BaseForm<T> extends Component<T> {
     this.events = events;
 
     this.submitButton = container.querySelector(
-      'button[type="submit"]',
+      'button[type="submit"]'
     ) as HTMLButtonElement;
 
-    this.errorElement = container.querySelector(".form__errors") as HTMLElement;
+    this.errorElement = container.querySelector(
+      ".form__errors"
+    ) as HTMLElement;
 
     container.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -23,9 +30,8 @@ export abstract class BaseForm<T> extends Component<T> {
     });
   }
 
-  set errors(value: Record<string, string>) {
-    const messages = Object.values(value).filter(Boolean);
-    this.errorElement.innerHTML = messages.join("<br>");
+  set errors(value: string) {
+    this.errorElement.innerHTML = value;
   }
 
   set valid(value: boolean) {

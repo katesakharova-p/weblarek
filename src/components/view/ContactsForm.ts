@@ -1,8 +1,12 @@
 import { IEvents } from "../base/Events";
 import { BaseForm } from "./BaseForm";
-import { IBuyer } from "../../types";
 
-export class ContactsForm extends BaseForm<IBuyer> {
+interface IContactsForm {
+  email: string;
+  phone: string;
+}
+
+export class ContactsForm extends BaseForm<IContactsForm> {
   private emailInput: HTMLInputElement;
   private phoneInput: HTMLInputElement;
 
@@ -18,13 +22,13 @@ export class ContactsForm extends BaseForm<IBuyer> {
     ) as HTMLInputElement;
 
     this.emailInput.addEventListener("input", () => {
-      this.events.emit("contacts:change", {
+      this.events.emit<Partial<IContactsForm>>("contacts:change", {
         email: this.emailInput.value,
       });
     });
 
     this.phoneInput.addEventListener("input", () => {
-      this.events.emit("contacts:change", {
+      this.events.emit<Partial<IContactsForm>>("contacts:change", {
         phone: this.phoneInput.value,
       });
     });
@@ -39,9 +43,6 @@ export class ContactsForm extends BaseForm<IBuyer> {
   }
 
   protected handleSubmit(): void {
-    this.events.emit("contacts:submit", {
-      email: this.emailInput.value,
-      phone: this.phoneInput.value,
-    });
+    this.events.emit("contacts:submit");
   }
 }

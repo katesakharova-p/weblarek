@@ -1,7 +1,10 @@
 import { Card } from "./Card";
-import { IProduct } from "../../types";
 
-export class BasketCard extends Card<IProduct> {
+interface IBasketCard {
+  index: number;
+}
+
+export class BasketCard extends Card<IBasketCard> {
   private indexElement: HTMLElement;
   private button: HTMLButtonElement;
 
@@ -19,10 +22,5 @@ export class BasketCard extends Card<IProduct> {
 
   set index(value: number) {
     this.indexElement.textContent = String(value + 1);
-  }
-
-  set data(data: IProduct) {
-    this.setTitle(data.title);
-    this.setPrice(data.price);
   }
 }

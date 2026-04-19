@@ -1,12 +1,15 @@
 import { Component } from "../base/Component";
 
-export class CatalogView extends Component<HTMLElement[]> {
+interface ICatalogView {
+  items: HTMLElement[];
+}
+
+export class CatalogView extends Component<ICatalogView> {
   constructor(container: HTMLElement) {
     super(container);
   }
 
-  render(items: HTMLElement[]): HTMLElement {
+  set items(items: HTMLElement[]) {
     this.container.replaceChildren(...items);
-    return this.container;
   }
 }

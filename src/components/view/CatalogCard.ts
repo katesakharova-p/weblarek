@@ -1,16 +1,28 @@
 import { Card } from "./Card";
-import { IProduct } from "../../types";
+import { categoryMap } from "../../utils/constants";
 
-export class CatalogCard extends Card<IProduct> {
+interface ICatalogCard {
+  category: string;
+}
+
+export class CatalogCard extends Card<ICatalogCard> {
+  private categoryElement: HTMLElement;
+
   constructor(container: HTMLElement, actions: { onClick: () => void }) {
     super(container);
 
+    this.categoryElement = this.container.querySelector(".card__category")!;
     this.container.addEventListener("click", actions.onClick);
   }
 
-  set data(data: IProduct) {
-    this.setTitle(data.title);
-    this.setPrice(data.price);
-    this.setCategory(data.category);
+  set category(value: string) {
+    this.categoryElement.textContent = value;
+
+    this.categoryElement.classList.remove(...Object.values(categoryMap));
+
+    const className = categoryMap[value as keyof typeof categoryMap];
+    if (className) {
+      this.categoryElement.classList.add(className);
+    }
   }
 }

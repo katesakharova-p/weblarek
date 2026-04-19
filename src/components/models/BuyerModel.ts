@@ -38,8 +38,7 @@ export class BuyerModel {
     this.events.emit("buyer:changed", this.getData());
   }
 
-  // ШАГ 1
-  validateOrder(): ValidationErrors {
+  validate(): ValidationErrors {
     const errors: ValidationErrors = {};
 
     if (!this._payment) {
@@ -49,13 +48,6 @@ export class BuyerModel {
     if (!this._address.trim()) {
       errors.address = "Необходимо указать адрес доставки";
     }
-
-    return errors;
-  }
-
-  // ШАГ 2
-  validateContacts(): ValidationErrors {
-    const errors: ValidationErrors = {};
 
     if (!this._email.trim()) {
       errors.email = "Введите email";

@@ -34,20 +34,29 @@ export class Presenter {
     private basketView: BasketView,
     private orderForm: OrderForm,
     private contactsForm: ContactsForm,
-    private successView: SuccessView
+    private successView: SuccessView,
   ) {
     this.subscribeEvents();
   }
 
   private subscribeEvents() {
-    // каталог
+    // продукты
     this.events.on("products:changed", () => {
       this.renderCatalog();
     });
 
     // корзина
     this.events.on("cart:changed", () => {
-      this.header.setCounter(this.cartModel.getCount());
+      this.header.counter = this.cartModel.getCount();
+      this.renderBasket();
+    });
+
+    this.events.on<IProduct>("card:select", (product) => {
+      this.productsModel.setSelectedProduct(product);
+    });
+
+    this.events.on<IProduct>("cart:remove", (product) => {
+      this.cartModel.removeItem(product);
     });
 
     // выбор товара
@@ -63,9 +72,11 @@ export class Presenter {
       const product = this.productsModel.getSelectedProduct();
       if (!product) return;
 
-      this.cartModel.hasItem(product.id)
-        ? this.cartModel.removeItem(product)
-        : this.cartModel.addItem(product);
+      if (this.cartModel.hasItem(product.id)) {
+        this.cartModel.removeItem(product);
+      } else {
+        this.cartModel.addItem(product);
+      }
 
       this.modal.close();
     });
@@ -73,37 +84,40 @@ export class Presenter {
     // открыть корзину
     this.events.on("basket:open", () => {
       this.renderBasket();
-      this.modal.open(this.basketView.getContainer());
+      const basket = this.basketView.render();
+      this.modal.render(basket);
     });
 
-    // открыть форму заказа
+    // открыть заказ
     this.events.on("order:open", () => {
       const buyer = this.buyerModel.getData();
 
       this.orderForm.payment = buyer.payment;
       this.orderForm.address = buyer.address;
 
-      this.modal.open(this.orderForm.render());
+      this.modal.render(this.orderForm.render());
     });
 
-    // изменения шага 1
+    // валидация шаг 1
     this.events.on("order:change", (data) => {
       this.buyerModel.setData(data);
 
       const buyer = this.buyerModel.getData();
-      const errors = this.buyerModel.validateOrder();
+      const errors = this.buyerModel.validate();
 
       this.orderForm.payment = buyer.payment;
       this.orderForm.address = buyer.address;
 
-      const isValid =
-        !errors.payment &&
-        !errors.address &&
-        buyer.payment &&
-        buyer.address?.trim();
+      const orderErrors = {
+        payment: errors.payment,
+        address: errors.address,
+      };
 
-      this.orderForm.errors = errors;
-      this.orderForm.valid = Boolean(isValid);
+      this.orderForm.errors = Object.values(orderErrors)
+        .filter(Boolean)
+        .join("<br>");
+
+      this.orderForm.valid = !orderErrors.payment && !orderErrors.address;
     });
 
     // переход ко 2 шагу
@@ -113,27 +127,29 @@ export class Presenter {
       this.contactsForm.email = buyer.email;
       this.contactsForm.phone = buyer.phone;
 
-      this.modal.open(this.contactsForm.render());
+      this.modal.render(this.contactsForm.render());
     });
 
-    // изменения шага 2
+    // валидация шаг 2
     this.events.on("contacts:change", (data) => {
       this.buyerModel.setData(data);
 
       const buyer = this.buyerModel.getData();
-      const errors = this.buyerModel.validateContacts();
+      const errors = this.buyerModel.validate();
 
       this.contactsForm.email = buyer.email;
       this.contactsForm.phone = buyer.phone;
 
-      const isValid =
-        !errors.email &&
-        !errors.phone &&
-        buyer.email?.trim() &&
-        buyer.phone?.trim();
+      const contactErrors = {
+        email: errors.email,
+        phone: errors.phone,
+      };
 
-      this.contactsForm.errors = errors;
-      this.contactsForm.valid = Boolean(isValid);
+      this.contactsForm.errors = Object.values(contactErrors)
+        .filter(Boolean)
+        .join("<br>");
+
+      this.contactsForm.valid = !contactErrors.email && !contactErrors.phone;
     });
 
     // отправка заказа
@@ -152,28 +168,36 @@ export class Presenter {
         this.cartModel.clear();
         this.buyerModel.clear();
 
-        this.successView.total = result.total;
-        this.modal.open(this.successView.render());
+        this.modal.render(
+          this.successView.render({
+            total: result.total,
+          }),
+        );
       } catch (e) {
         console.error(e);
       }
     });
 
-    // закрытие success
     this.events.on("success:close", () => {
       this.modal.close();
     });
   }
 
   private openPreview(product: IProduct) {
-    this.previewCard.data = product;
+    this.modal.render(
+      this.previewCard.render({
+        title: product.title,
+        price: product.price,
+        category: product.category,
+        description: product.description,
+        image: product.image,
+      }),
+    );
 
     this.previewCard.buttonState = {
       isInCart: this.cartModel.hasItem(product.id),
       isAvailable: product.price !== null,
     };
-
-    this.modal.open(this.previewCard.render());
   }
 
   private renderCatalog() {
@@ -181,15 +205,17 @@ export class Presenter {
       const container = cloneTemplate("#card-catalog");
 
       const card = new CatalogCard(container, {
-        onClick: () => this.productsModel.setSelectedProduct(product),
+        onClick: () => this.events.emit("card:select", product),
       });
 
-      card.data = product;
-
-      return card.render();
+      return card.render({
+        title: product.title,
+        price: product.price,
+        category: product.category,
+      });
     });
 
-    this.catalogView.render(items);
+    this.catalogView.render({ items });
   }
 
   private renderBasket() {
@@ -197,17 +223,20 @@ export class Presenter {
       const container = cloneTemplate("#card-basket");
 
       const card = new BasketCard(container, {
-        onRemove: () => this.cartModel.removeItem(product),
+        onRemove: () => this.events.emit("cart:remove", product),
       });
 
-      card.data = product;
-      card.index = index;
-
-      return card.render();
+      return card.render({
+        title: product.title,
+        price: product.price,
+        index: index,
+      });
     });
 
-    this.basketView.items = items;
-    this.basketView.total = this.cartModel.getTotal();
-    this.basketView.valid = items.length > 0;
+    this.basketView.render({
+      items,
+      total: this.cartModel.getTotal(),
+      valid: items.length > 0,
+    });
   }
 }

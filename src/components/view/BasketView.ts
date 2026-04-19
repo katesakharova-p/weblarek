@@ -1,7 +1,13 @@
 import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 
-export class BasketView extends Component<null> {
+interface IBasketView {
+  items: HTMLElement[];
+  total: number;
+  valid: boolean;
+}
+
+export class BasketView extends Component<IBasketView> {
   private list: HTMLElement;
   private totalElement: HTMLElement;
   private button: HTMLButtonElement;
@@ -35,9 +41,5 @@ export class BasketView extends Component<null> {
 
   set valid(value: boolean) {
     this.button.disabled = !value;
-  }
-
-  getContainer(): HTMLElement {
-    return this.container;
   }
 }

@@ -1,17 +1,25 @@
-import { IProduct } from "../../types";
 import { Card } from "./Card";
+import { categoryMap } from "../../utils/constants";
 
-export class PreviewCard extends Card<IProduct> {
-  private image: HTMLImageElement;
-  private description: HTMLElement;
+interface IPreviewCard {
+  category: string;
+  description: string;
+  image: string;
+}
+
+export class PreviewCard extends Card<IPreviewCard> {
+  private imageElement: HTMLImageElement;
+  private descriptionElement: HTMLElement;
   private button: HTMLButtonElement;
+  private categoryElement: HTMLElement;
 
   constructor(container: HTMLElement, actions: { onClick: () => void }) {
     super(container);
 
-    this.image = container.querySelector(".card__image")!;
-    this.description = container.querySelector(".card__text")!;
+    this.imageElement = container.querySelector(".card__image")!;
+    this.descriptionElement = container.querySelector(".card__text")!;
     this.button = container.querySelector(".card__button")!;
+    this.categoryElement = this.container.querySelector(".card__category")!;
 
     this.button.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -19,15 +27,27 @@ export class PreviewCard extends Card<IProduct> {
     });
   }
 
-  set data(data: IProduct) {
-    this.setTitle(data.title);
-    this.setPrice(data.price);
-    this.setCategory(data.category);
+  set category(value: string) {
+    this.categoryElement.textContent = value;
 
-    this.description.textContent = data.description;
+    this.categoryElement.classList.remove(...Object.values(categoryMap));
 
-    this.image.src = data.image;
-    this.image.alt = data.title;
+    const className = categoryMap[value as keyof typeof categoryMap];
+    if (className) {
+      this.categoryElement.classList.add(className);
+    }
+  }
+
+  set description(value: string) {
+    this.descriptionElement.textContent = value;
+  }
+
+  set image(value: string) {
+    this.setImage(
+      this.imageElement,
+      value,
+      this.titleElement.textContent || ""
+    );
   }
 
   set buttonState({
@@ -44,6 +64,8 @@ export class PreviewCard extends Card<IProduct> {
       return;
     }
 
-    this.button.textContent = isInCart ? "Удалить из корзины" : "В корзину";
+    this.button.textContent = isInCart
+      ? "Удалить из корзины"
+      : "В корзину";
   }
 }

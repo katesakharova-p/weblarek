@@ -72,9 +72,8 @@ new Presenter(
   successView,
 );
 
-api
-  .getProducts()
-  .then((products) => {
-    productsModel.setProducts(products);
+api.getProducts()
+  .then((data) => {
+    productsModel.setProducts(data.items);
   })
   .catch(console.error);
