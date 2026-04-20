@@ -51,15 +51,11 @@ export class Presenter {
       this.renderBasket();
     });
 
+    // выбор товара
     this.events.on<IProduct>("card:select", (product) => {
       this.productsModel.setSelectedProduct(product);
     });
 
-    this.events.on<IProduct>("cart:remove", (product) => {
-      this.cartModel.removeItem(product);
-    });
-
-    // выбор товара
     this.events.on("product:selected", () => {
       const product = this.productsModel.getSelectedProduct();
       if (!product) return;
@@ -81,11 +77,18 @@ export class Presenter {
       this.modal.close();
     });
 
+    // удаление из корзины
+    this.events.on<IProduct>("cart:remove", (product) => {
+      this.cartModel.removeItem(product);
+    });
+
     // открыть корзину
     this.events.on("basket:open", () => {
       this.renderBasket();
-      const basket = this.basketView.render();
-      this.modal.render(basket);
+
+      this.modal.render({
+        content: this.basketView.render(),
+      });
     });
 
     // открыть заказ
@@ -95,16 +98,26 @@ export class Presenter {
       this.orderForm.payment = buyer.payment;
       this.orderForm.address = buyer.address;
 
-      this.modal.render(this.orderForm.render());
+      this.modal.render({
+        content: this.orderForm.render(),
+      });
     });
 
-    // валидация шаг 1
+    // изменение данных (ТОЛЬКО модель!)
     this.events.on("order:change", (data) => {
       this.buyerModel.setData(data);
+    });
 
+    this.events.on("contacts:change", (data) => {
+      this.buyerModel.setData(data);
+    });
+
+    // обработчик состояния
+    this.events.on("buyer:changed", () => {
       const buyer = this.buyerModel.getData();
       const errors = this.buyerModel.validate();
 
+      // заказ
       this.orderForm.payment = buyer.payment;
       this.orderForm.address = buyer.address;
 
@@ -118,25 +131,8 @@ export class Presenter {
         .join("<br>");
 
       this.orderForm.valid = !orderErrors.payment && !orderErrors.address;
-    });
 
-    // переход ко 2 шагу
-    this.events.on("order:submit", () => {
-      const buyer = this.buyerModel.getData();
-
-      this.contactsForm.email = buyer.email;
-      this.contactsForm.phone = buyer.phone;
-
-      this.modal.render(this.contactsForm.render());
-    });
-
-    // валидация шаг 2
-    this.events.on("contacts:change", (data) => {
-      this.buyerModel.setData(data);
-
-      const buyer = this.buyerModel.getData();
-      const errors = this.buyerModel.validate();
-
+      // контакты
       this.contactsForm.email = buyer.email;
       this.contactsForm.phone = buyer.phone;
 
@@ -149,7 +145,20 @@ export class Presenter {
         .filter(Boolean)
         .join("<br>");
 
-      this.contactsForm.valid = !contactErrors.email && !contactErrors.phone;
+      this.contactsForm.valid =
+        !contactErrors.email && !contactErrors.phone;
+    });
+
+    // переход ко 2 шагу
+    this.events.on("order:submit", () => {
+      const buyer = this.buyerModel.getData();
+
+      this.contactsForm.email = buyer.email;
+      this.contactsForm.phone = buyer.phone;
+
+      this.modal.render({
+        content: this.contactsForm.render(),
+      });
     });
 
     // отправка заказа
@@ -168,11 +177,11 @@ export class Presenter {
         this.cartModel.clear();
         this.buyerModel.clear();
 
-        this.modal.render(
-          this.successView.render({
+        this.modal.render({
+          content: this.successView.render({
             total: result.total,
           }),
-        );
+        });
       } catch (e) {
         console.error(e);
       }
@@ -184,15 +193,15 @@ export class Presenter {
   }
 
   private openPreview(product: IProduct) {
-    this.modal.render(
-      this.previewCard.render({
+    this.modal.render({
+      content: this.previewCard.render({
         title: product.title,
         price: product.price,
         category: product.category,
         description: product.description,
         image: product.image,
       }),
-    );
+    });
 
     this.previewCard.buttonState = {
       isInCart: this.cartModel.hasItem(product.id),
@@ -212,6 +221,7 @@ export class Presenter {
         title: product.title,
         price: product.price,
         category: product.category,
+        image: product.image,
       });
     });
 
